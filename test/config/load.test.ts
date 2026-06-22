@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { mkdtempSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
+import { tmpdir, homedir } from 'node:os'
 import { join } from 'node:path'
-import { loadConfig } from '../../src/config/load'
+import { loadConfig, defaultConfigPath } from '../../src/config/load'
 
 function tmpToml(body: string): string {
   const p = join(mkdtempSync(join(tmpdir(), 'beepify-cfg-')), 'config.toml')
@@ -25,5 +25,26 @@ describe('loadConfig', () => {
     const p = tmpToml(`[[channels]]\ntype = "bark"\nkey = "FILE"\n`)
     const c = loadConfig(p, { BARK_KEY: 'ENV' })
     expect(c.channels[0].key).toBe('ENV')
+  })
+  it('NTFY_TOPIC overrides an ntfy channel topic', () => {
+    const p = tmpToml(`[[channels]]\ntype = "ntfy"\ntopic = "FILE"\n`)
+    const c = loadConfig(p, { NTFY_TOPIC: 'ENV' })
+    expect(c.channels[0].topic).toBe('ENV')
+  })
+  it('falls back to defaults for wrong-typed values', () => {
+    const p = tmpToml(`debounce_seconds = "x"\nhost_label = 42\nlocale = "fr"\n`)
+    const c = loadConfig(p, {})
+    expect(c.debounce_seconds).toBe(20)
+    expect(c.host_label).toBe('')
+    expect(c.locale).toBe('en')
+  })
+})
+
+describe('defaultConfigPath', () => {
+  it('returns BEEPIFY_CONFIG when set', () => {
+    expect(defaultConfigPath({ BEEPIFY_CONFIG: '/custom/path.toml' })).toBe('/custom/path.toml')
+  })
+  it('falls back to the XDG config path when env is unset', () => {
+    expect(defaultConfigPath({})).toBe(join(homedir(), '.config', 'beepify', 'config.toml'))
   })
 })
