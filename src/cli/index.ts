@@ -83,4 +83,6 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   return cmd ? 1 : 0
 }
 
-main().then((code) => process.exit(code))
+main()
+  .then((code) => process.exit(code))
+  .catch((e) => { console.error(`beepify: ${e instanceof Error ? e.message : e}`); process.exit(1) })

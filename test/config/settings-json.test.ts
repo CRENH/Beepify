@@ -45,3 +45,21 @@ describe('uninstallHook', () => {
     expect(all).not.toContain(HOOK_COMMAND)
   })
 })
+
+describe('corrupt settings.json', () => {
+  function tmpCorrupt(): string {
+    const p = join(mkdtempSync(join(tmpdir(), 'beepify-corrupt-')), 'settings.json')
+    writeFileSync(p, '{ not valid')
+    return p
+  }
+
+  it('installHook throws a clear error for invalid JSON', () => {
+    const p = tmpCorrupt()
+    expect(() => installHook(p, HOOK_COMMAND, 1000)).toThrow('not valid JSON')
+  })
+
+  it('uninstallHook throws a clear error for invalid JSON', () => {
+    const p = tmpCorrupt()
+    expect(() => uninstallHook(p, HOOK_COMMAND)).toThrow('not valid JSON')
+  })
+})

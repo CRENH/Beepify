@@ -46,4 +46,26 @@ describe('runDoctor', () => {
     const lines = runDoctor(cfg, join(dir, 'settings.json'))
     expect(lines.join('\n')).toContain('bark')
   })
+
+  it('does not reveal a short secret verbatim (length <= 4 shows only ***)', () => {
+    const shortCfg: BeepifyConfig = {
+      debounce_seconds: 0, host_label: '', locale: 'en',
+      channels: [{ type: 'bark', key: 'ab', server: 'https://api.day.app' }],
+    }
+    const dir = mkdtempSync(join(tmpdir(), 'beepify-doc-short-'))
+    const lines = runDoctor(shortCfg, join(dir, 'settings.json'))
+    const joined = lines.join('\n')
+    expect(joined).not.toContain('ab***')
+    expect(joined).toContain('***')
+  })
+
+  it('shows first 3 chars + *** for a normal-length key', () => {
+    const normalCfg: BeepifyConfig = {
+      debounce_seconds: 0, host_label: '', locale: 'en',
+      channels: [{ type: 'bark', key: 'K1234567', server: 'https://api.day.app' }],
+    }
+    const dir = mkdtempSync(join(tmpdir(), 'beepify-doc-normal-'))
+    const lines = runDoctor(normalCfg, join(dir, 'settings.json'))
+    expect(lines.join('\n')).toContain('K12***')
+  })
 })

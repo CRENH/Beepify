@@ -78,7 +78,7 @@ export function runDoctor(config: BeepifyConfig, settingsPath: string): string[]
   if (config.channels.length === 0) lines.push('channels: (none configured)')
   for (const ch of config.channels) {
     const secret = (ch.key ?? ch.topic ?? '') as string
-    const redacted = secret ? secret.slice(0, 3) + '***' : '(missing)'
+    const redacted = !secret ? '(missing)' : secret.length <= 4 ? '***' : secret.slice(0, 3) + '***'
     lines.push(`channel ${ch.type}: ${redacted}`)
   }
   lines.push(`settings.json: ${existsSync(settingsPath) ? 'present' : 'missing'}`)

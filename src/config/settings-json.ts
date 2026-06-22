@@ -7,13 +7,22 @@ interface HookEntry { type: string; command: string }
 interface Matcher { matcher: string; hooks: HookEntry[] }
 interface Settings { hooks?: Record<string, Matcher[]>; [k: string]: unknown }
 
+function readSettings(settingsPath: string): Settings {
+  const text = readFileSync(settingsPath, 'utf8')
+  try {
+    return JSON.parse(text) as Settings
+  } catch (e) {
+    throw new Error(`settings.json at ${settingsPath} is not valid JSON — fix or remove it first (${e instanceof Error ? e.message : e})`)
+  }
+}
+
 export function installHook(
   settingsPath: string,
   command: string = HOOK_COMMAND,
   now: number = Date.now(),
 ): { changed: boolean; backup?: string } {
   const settings: Settings = existsSync(settingsPath)
-    ? JSON.parse(readFileSync(settingsPath, 'utf8'))
+    ? readSettings(settingsPath)
     : {}
   settings.hooks = settings.hooks || {}
 
@@ -48,7 +57,7 @@ export function uninstallHook(
   command: string = HOOK_COMMAND,
 ): { changed: boolean } {
   if (!existsSync(settingsPath)) return { changed: false }
-  const settings: Settings = JSON.parse(readFileSync(settingsPath, 'utf8'))
+  const settings: Settings = readSettings(settingsPath)
   let changed = false
   for (const evt of HOOK_EVENTS) {
     const arr = settings.hooks?.[evt]
