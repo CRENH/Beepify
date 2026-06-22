@@ -30,15 +30,19 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   const cmd = argv[0]
 
   if (cmd === 'notify') {
-    const { values } = parseArgs({
-      args: argv.slice(1),
-      options: { source: { type: 'string', default: 'claude-code' } },
-      allowPositionals: true,
-    })
-    const raw = await readStdin()
-    const config = loadConfig()
-    await runNotify(raw, values.source as string, config)
-    return 0 // never surface errors to the agent
+    try {
+      const { values } = parseArgs({
+        args: argv.slice(1),
+        options: { source: { type: 'string', default: 'claude-code' } },
+        allowPositionals: true,
+      })
+      const raw = await readStdin()
+      const config = loadConfig()
+      await runNotify(raw, values.source as string, config)
+    } catch {
+      // never surface errors to the agent
+    }
+    return 0
   }
 
   if (cmd === 'init') {
