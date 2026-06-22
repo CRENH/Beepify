@@ -6,13 +6,28 @@
   "bin": { "beepify": "dist/cli/index.js" },
   "files": ["dist", "config.example.toml", "README.md", "README.zh-CN.md", "LICENSE"],
   "engines": { "node": ">=18" },
+  "keywords": [
+    "claude-code",
+    "notifications",
+    "push",
+    "bark",
+    "ntfy",
+    "cli",
+    "hooks",
+    "ai-agent"
+  ],
+  "author": "CRENH",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/CRENH/Beepify.git" },
+  "homepage": "https://github.com/CRENH/Beepify#readme",
+  "bugs": { "url": "https://github.com/CRENH/Beepify/issues" },
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
-  "license": "MIT",
   "dependencies": { "smol-toml": "^1.3.0" },
   "devDependencies": {
     "@types/node": "^20.0.0",
