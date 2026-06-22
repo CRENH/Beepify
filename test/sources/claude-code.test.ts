@@ -42,6 +42,22 @@ describe('parseTranscript', () => {
   it('returns empty fields for a missing file', () => {
     expect(parseTranscript('/nonexistent/path')).toEqual({ summary: '', action: '' })
   })
+  it('clears action when the last assistant turn has no tool (summary still persists)', () => {
+    // A tool turn followed by a text-only assistant turn means no tool is currently
+    // pending — `action` must be '' so the event classifies as waiting-input, not
+    // needs-approval. Preserving the earlier tool across turns would resurface an
+    // already-resolved tool and misclassify. This pins that intended semantics.
+    const p = join(mkdtempSync(join(tmpdir(), 'beepify-tx-')), 't.jsonl')
+    writeFileSync(p, [
+      JSON.stringify({ type: 'assistant', message: { content: [
+        { type: 'tool_use', name: 'Bash', input: { command: 'ls' } },
+      ] } }),
+      JSON.stringify({ type: 'assistant', message: { content: [
+        { type: 'text', text: 'all done' },
+      ] } }),
+    ].join('\n'))
+    expect(parseTranscript(p)).toEqual({ summary: 'all done', action: '' })
+  })
 })
 
 describe('claudeCodeSource.parse', () => {

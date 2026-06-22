@@ -44,6 +44,20 @@ describe('uninstallHook', () => {
       .flatMap((m: { hooks: { command: string }[] }) => m.hooks.map((h) => h.command))
     expect(all).not.toContain(HOOK_COMMAND)
   })
+
+  it('preserves a sibling hook in the same matcher', () => {
+    const p = tmpSettings({
+      hooks: { Notification: [{ matcher: '*', hooks: [{ type: 'command', command: 'open-island-hooks.py' }] }] },
+    })
+    installHook(p, HOOK_COMMAND, 1000)
+    const r = uninstallHook(p, HOOK_COMMAND)
+    expect(r.changed).toBe(true)
+    const s = JSON.parse(readFileSync(p, 'utf8'))
+    const all = [...(s.hooks.Stop ?? []), ...(s.hooks.Notification ?? [])]
+      .flatMap((m: { hooks: { command: string }[] }) => m.hooks.map((h) => h.command))
+    expect(all).not.toContain(HOOK_COMMAND) // beepify gone
+    expect(all).toContain('open-island-hooks.py') // sibling survives
+  })
 })
 
 describe('corrupt settings.json', () => {

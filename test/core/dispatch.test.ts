@@ -16,13 +16,15 @@ beforeEach(() => { clearRegistry(); registerChannel(okChannel); registerChannel(
 describe('dispatch', () => {
   it('fans out; one channel throwing does not stop the others', async () => {
     const res = await dispatch(event, cfg([{ type: 'ok' }, { type: 'boom' }]))
+    expect(res).toHaveLength(2) // every configured channel produces exactly one result
     expect(res.find((r) => r.channel === 'ok')?.ok).toBe(true)
     const boom = res.find((r) => r.channel === 'boom')
     expect(boom?.ok).toBe(false)
     expect(boom?.error).toContain('kaboom')
   })
-  it('unconfigured channel type is skipped, not failed', async () => {
+  it('unconfigured channel type is skipped, not failed (skipped is distinct from error)', async () => {
     const res = await dispatch(event, cfg([{ type: 'nope' }]))
     expect(res[0]).toMatchObject({ channel: 'nope', ok: false, skipped: true })
+    expect(res[0].error).toBeUndefined() // skipped must NOT also carry an error shape
   })
 })

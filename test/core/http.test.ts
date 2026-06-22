@@ -26,4 +26,23 @@ describe('request', () => {
     expect(f).toHaveBeenCalledTimes(3) // initial + 2 retries
     vi.unstubAllGlobals()
   })
+
+  it('returns the real HTTP status on a non-2xx response (not 0)', async () => {
+    const f = vi.fn(async () => new Response('nope', { status: 404 }))
+    vi.stubGlobal('fetch', f)
+    const res = await request('https://example.com', { retries: 1, retryDelayMs: 0 })
+    expect(res.ok).toBe(false)
+    expect(res.status).toBe(404) // real status preserved for diagnostics, not 0
+    expect(f).toHaveBeenCalledTimes(2) // non-2xx still retries (initial + 1 retry)
+    vi.unstubAllGlobals()
+  })
+
+  it('returns status 0 only when no response was received (network error)', async () => {
+    const f = vi.fn(async () => { throw new Error('network') })
+    vi.stubGlobal('fetch', f)
+    const res = await request('https://example.com', { retries: 0, retryDelayMs: 0 })
+    expect(res.ok).toBe(false)
+    expect(res.status).toBe(0)
+    vi.unstubAllGlobals()
+  })
 })

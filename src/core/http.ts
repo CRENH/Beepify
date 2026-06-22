@@ -26,12 +26,14 @@ export async function request(
     retryDelayMs = 1000,
   } = opts
 
+  let lastStatus = 0 // 0 = no response received (network error / timeout)
   for (let attempt = 0; attempt <= retries; attempt++) {
     const ctrl = new AbortController()
     const timer = setTimeout(() => ctrl.abort(), timeoutMs)
     try {
       const res = await fetch(url, { method, headers, body, signal: ctrl.signal })
       if (res.ok) return { ok: true, status: res.status }
+      lastStatus = res.status // preserve real status (e.g. 404/500) for diagnostics
     } catch {
       // fall through to retry
     } finally {
@@ -39,5 +41,5 @@ export async function request(
     }
     if (attempt < retries) await sleep(retryDelayMs)
   }
-  return { ok: false, status: 0 }
+  return { ok: false, status: lastStatus }
 }

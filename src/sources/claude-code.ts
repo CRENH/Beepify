@@ -91,6 +91,10 @@ export function parseTranscript(path: string): { summary: string; action: string
     const txt = texts.filter(Boolean).join('\n').trim()
     if (d.type === 'assistant') {
       if (txt) summary = txt
+      // action reflects ONLY the latest assistant turn: a tool there is the one
+      // currently pending approval; a text-only turn means nothing is pending, so
+      // action clears (→ waiting-input, not a stale needs-approval). Do not persist
+      // action across turns. summary, by contrast, keeps the last non-empty reply.
       action = tools.length ? toolDesc(tools[tools.length - 1]) : ''
     }
   }
