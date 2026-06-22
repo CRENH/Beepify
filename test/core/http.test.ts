@@ -33,6 +33,7 @@ describe('request', () => {
     const res = await request('https://example.com', { retries: 1, retryDelayMs: 0 })
     expect(res.ok).toBe(false)
     expect(res.status).toBe(404) // real status preserved for diagnostics, not 0
+    expect(f).toHaveBeenCalledTimes(2) // non-2xx still retries (initial + 1 retry)
     vi.unstubAllGlobals()
   })
 
