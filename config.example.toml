@@ -1,0 +1,19 @@
+# Copy to ~/.config/beepify/config.toml and fill in your channel(s).
+# This file (the example) is safe to commit; your real config.toml is NOT.
+
+debounce_seconds = 20
+host_label = ""              # empty = auto-detect ComputerName
+locale = "en"                # "en" (default) | "zh-CN"
+
+# Add one [[channels]] block per push target. Unconfigured channels are skipped.
+
+# [[channels]]
+# type   = "bark"
+# key    = "your-bark-key"
+# server = "https://api.day.app"
+# icon   = "https://example.com/icon.png"   # optional
+
+# [[channels]]
+# type   = "ntfy"
+# topic  = "your-secret-topic"
+# server = "https://ntfy.sh"
