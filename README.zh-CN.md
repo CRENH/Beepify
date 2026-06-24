@@ -15,7 +15,7 @@ Beepify 是一个单向通知路由器。它接收 agent 的事件(v1:**Claude C
 ## 安装
 
 ```bash
-npm install -g beepify
+npm install -g @elbc/beepify
 beepify init        # 生成 ~/.config/beepify/config.toml 并装好 Claude Code hook
 ```
 
