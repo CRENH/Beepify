@@ -15,7 +15,7 @@ Beepify is a one-way notification router. It takes events from an agent (v1: **C
 ## Install
 
 ```bash
-npm install -g beepify
+npm install -g @elbc/beepify
 beepify init        # scaffolds ~/.config/beepify/config.toml and installs the Claude Code hook
 ```
 
