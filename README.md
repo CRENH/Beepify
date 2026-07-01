@@ -16,12 +16,13 @@ Beepify is a one-way notification router. It takes events from an agent (v1: **C
 
 ```bash
 npm install -g @elbc/beepify
-beepify init        # scaffolds ~/.config/beepify/config.toml and installs the Claude Code hook
+beepify setup       # interactive: pick language, add channels, install the hook, send a test
 ```
 
-Edit `~/.config/beepify/config.toml`, add a channel, then:
+`beepify setup` edits an existing config in place (current values shown as defaults). Prefer scripting? `beepify init` remains the non-interactive path:
 
 ```bash
+beepify init        # scaffolds ~/.config/beepify/config.toml and installs the Claude Code hook
 beepify test        # sends a sample notification
 ```
 
@@ -58,6 +59,7 @@ Set `provider = "open-island"` to drive the Open Island Dynamic Island app inste
 | command | purpose |
 |---|---|
 | `beepify notify --source claude-code` | hook entry (invoked automatically) |
+| `beepify setup` | interactive wizard: edit config, install hook, send a test |
 | `beepify init [--uninstall]` | scaffold config + install/remove the hook |
 | `beepify test` | send a sample push to verify channels |
 | `beepify doctor` | print config / channel / hook diagnostics |

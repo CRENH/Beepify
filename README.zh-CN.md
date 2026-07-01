@@ -16,12 +16,13 @@ Beepify 是一个单向通知路由器。它接收 agent 的事件(v1:**Claude C
 
 ```bash
 npm install -g @elbc/beepify
-beepify init        # 生成 ~/.config/beepify/config.toml 并装好 Claude Code hook
+beepify setup       # 交互式:选语言、加 channel、装 hook、发测试
 ```
 
-编辑 `~/.config/beepify/config.toml` 加一个 channel,然后:
+`beepify setup` 会就地编辑现有配置(当前值作默认)。想脚本化?`beepify init` 仍是非交互路径:
 
 ```bash
+beepify init        # 生成 ~/.config/beepify/config.toml 并装好 Claude Code hook
 beepify test        # 发一条样例通知
 ```
 
@@ -58,6 +59,7 @@ provider = "native"        # 通知中心(装了 terminal-notifier 就用它,否
 | 命令 | 作用 |
 |---|---|
 | `beepify notify --source claude-code` | hook 入口(自动调用)|
+| `beepify setup` | 交互向导:编辑配置、装 hook、发测试 |
 | `beepify init [--uninstall]` | 生成配置 + 安装/移除 hook |
 | `beepify test` | 发样例推送验证 channel |
 | `beepify doctor` | 打印配置 / channel / hook 诊断 |
