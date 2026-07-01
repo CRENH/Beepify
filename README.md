@@ -54,13 +54,27 @@ provider = "native"        # Notification Center (uses terminal-notifier if inst
 
 Set `provider = "open-island"` to drive the Open Island Dynamic Island app instead (install it separately; Beepify auto-detects `open-island-hooks.py`).
 
+## Codex CLI
+
+Beepify also works with the OpenAI Codex CLI via its `[hooks]` lifecycle system.
+
+```bash
+beepify init --agent codex   # wires ~/.codex/config.toml, scaffolds config
+# or run `beepify setup` and choose Codex (or "both")
+```
+
+This appends a managed block to `~/.codex/config.toml` that notifies on `Stop`
+(task done) and `PermissionRequest` (needs approval). The Bark / ntfy / desktop
+channels are shared with Claude Code — configure them once. Remove with
+`beepify init --agent codex --uninstall`.
+
 ## Commands
 
 | command | purpose |
 |---|---|
-| `beepify notify --source claude-code` | hook entry (invoked automatically) |
-| `beepify setup` | interactive wizard: edit config, install hook, send a test |
-| `beepify init [--uninstall]` | scaffold config + install/remove the hook |
+| `beepify notify --source <claude-code\|codex>` | hook entry (invoked automatically) |
+| `beepify setup` | interactive wizard: edit config, install hook(s), send a test |
+| `beepify init [--agent codex] [--uninstall]` | scaffold config + install/remove a hook |
 | `beepify test` | send a sample push to verify channels |
 | `beepify doctor` | print config / channel / hook diagnostics |
 

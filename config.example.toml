@@ -29,3 +29,7 @@ notify_idle = false          # push the "waiting for your input" idle reminder t
 # provider = "native"
 # sound = ""               # optional; native only
 # open_island_command = "" # optional; auto-detected if empty
+
+# Codex CLI: channels above are shared. To let Codex trigger Beepify, run
+#   beepify init --agent codex   (or choose Codex in `beepify setup`)
+# which wires a managed [hooks] block into ~/.codex/config.toml.

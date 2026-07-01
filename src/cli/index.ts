@@ -9,7 +9,7 @@ import { detectOpenIsland, realProbe } from '../channels/desktop/detect'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
-const VERSION = '0.2.0' // keep in sync with package.json
+const VERSION = '0.3.0' // keep in sync with package.json
 
 function readStdin(): Promise<string> {
   return new Promise((resolve) => {
@@ -26,7 +26,7 @@ const HELP = `beepify <command>
 
   notify --source <name>   read a hook event on stdin and push (used by hooks)
   setup                    interactive wizard: edit config, install hook, test
-  init [--uninstall]       scaffold config + install the Claude Code hook
+  init [--agent codex] [--uninstall]   scaffold config + install a hook (Claude Code by default, or Codex)
   test                     send a sample notification to verify channels
   doctor                   print config / channel / hook diagnostics
   --version                print version`

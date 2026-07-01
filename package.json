@@ -1,6 +1,6 @@
 {
   "name": "@elbc/beepify",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Turn AI coding agent events into phone & desktop notifications",
   "type": "module",
   "bin": { "beepify": "dist/cli/index.js" },

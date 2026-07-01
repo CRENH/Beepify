@@ -54,13 +54,26 @@ provider = "native"        # 通知中心(装了 terminal-notifier 就用它,否
 
 把 `provider` 设为 `"open-island"` 可改为驱动 Open Island 灵动岛 app(需另外安装;Beepify 会自动探测 `open-island-hooks.py`)。
 
+## Codex CLI
+
+Beepify 也可通过 OpenAI Codex CLI 的 `[hooks]` 生命周期系统工作。
+
+```bash
+beepify init --agent codex   # 接线 ~/.codex/config.toml,并生成配置
+# 或运行 `beepify setup` 选择 Codex(或 "both")
+```
+
+这会向 `~/.codex/config.toml` 追加一个托管块,在 `Stop`(任务完成)与
+`PermissionRequest`(需批准)时通知。Bark / ntfy / desktop 通道与 Claude Code
+共享——只需配置一次。卸载:`beepify init --agent codex --uninstall`。
+
 ## 命令
 
 | 命令 | 作用 |
 |---|---|
-| `beepify notify --source claude-code` | hook 入口(自动调用)|
+| `beepify notify --source <claude-code\|codex>` | hook 入口(自动调用)|
 | `beepify setup` | 交互向导:编辑配置、装 hook、发测试 |
-| `beepify init [--uninstall]` | 生成配置 + 安装/移除 hook |
+| `beepify init [--agent codex] [--uninstall]` | 生成配置 + 安装/移除 hook |
 | `beepify test` | 发样例推送验证 channel |
 | `beepify doctor` | 打印配置 / channel / hook 诊断 |
 
