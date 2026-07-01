@@ -41,6 +41,18 @@ key    = "你的-bark-key"
 
 设 `notify_idle = true` 可额外接收"Claude 在等你回复"的空闲提醒(turn 结束约 60 秒后触发)。默认关闭,因为它与"任务完成"通知重复。
 
+### 桌面通知(macOS)
+
+加一个 `desktop` channel 即可收到 macOS 原生通知:
+
+```toml
+[[channels]]
+type = "desktop"
+provider = "native"        # 通知中心(装了 terminal-notifier 就用它,否则 osascript)
+```
+
+把 `provider` 设为 `"open-island"` 可改为驱动 Open Island 灵动岛 app(需另外安装;Beepify 会自动探测 `open-island-hooks.py`)。
+
 ## 命令
 
 | 命令 | 作用 |

@@ -41,6 +41,18 @@ Secrets can also come from `BEEPIFY_*` env vars (`BARK_KEY`, `NTFY_TOPIC`).
 
 Set `notify_idle = true` to also receive the "Claude is waiting for your input" reminder that fires ~60s after a turn ends. It is off by default because it duplicates the done notification.
 
+### Desktop notifications (macOS)
+
+Add a `desktop` channel to get native macOS notifications:
+
+```toml
+[[channels]]
+type = "desktop"
+provider = "native"        # Notification Center (uses terminal-notifier if installed, else osascript)
+```
+
+Set `provider = "open-island"` to drive the Open Island Dynamic Island app instead (install it separately; Beepify auto-detects `open-island-hooks.py`).
+
 ## Commands
 
 | command | purpose |
