@@ -1,6 +1,6 @@
 import type { BeepifyConfig } from '../core/types'
 import type { SetupAnswers, ChannelAnswer } from './setup-core'
-import { normalizeLocale, normalizeProvider } from './setup-core'
+import { normalizeLocale, normalizeProvider, normalizeAgents } from './setup-core'
 
 export interface SetupIO {
   ask(question: string, def?: string): Promise<string>
@@ -52,5 +52,8 @@ export async function runSetup(
   }
 
   const notify_idle = yes(await io.ask('Send the ~60s idle reminder too? (y/n)', cur?.notify_idle ? 'y' : 'n'))
-  return { locale, notify_idle, channels }
+  const agents = normalizeAgents(
+    await io.ask('Which coding agents to wire up? 1) Claude Code  2) Codex  3) both', '1'),
+  )
+  return { locale, notify_idle, agents, channels }
 }

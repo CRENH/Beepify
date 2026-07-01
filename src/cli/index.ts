@@ -115,10 +115,16 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     writeFileSync(configPath, renderConfigToml(answers))
     console.log(`Wrote ${configPath}`)
 
-    if (/^y/i.test(await io.ask('Install the Claude Code hook now? (y/n)', 'y'))) {
-      const settingsPath = join(homedir(), '.claude', 'settings.json')
-      const r = runInit({ settingsPath, configPath, uninstall: false })
-      console.log(r.hook.changed ? 'Installed Beepify hook.' : 'Hook already installed.')
+    for (const agent of answers.agents) {
+      if (agent === 'claude-code') {
+        const settingsPath = join(homedir(), '.claude', 'settings.json')
+        const r = runInit({ settingsPath, configPath, uninstall: false })
+        console.log(r.hook.changed ? 'Installed Claude Code hook.' : 'Claude Code hook already installed.')
+      } else if (agent === 'codex') {
+        const codexConfigPath = join(homedir(), '.codex', 'config.toml')
+        const r = runInitCodex({ codexConfigPath, beepifyConfigPath: configPath, uninstall: false })
+        console.log(r.hook.changed ? 'Installed Codex hook into ~/.codex/config.toml.' : 'Codex hook already installed.')
+      }
     }
     if (/^y/i.test(await io.ask('Send a test notification now? (y/n)', 'y'))) {
       for (const res of await runTest(loadConfig(configPath))) {
