@@ -39,6 +39,8 @@ key    = "your-bark-key"
 
 Secrets can also come from `BEEPIFY_*` env vars (`BARK_KEY`, `NTFY_TOPIC`).
 
+Set `notify_idle = true` to also receive the "Claude is waiting for your input" reminder that fires ~60s after a turn ends. It is off by default because it duplicates the done notification.
+
 ## Commands
 
 | command | purpose |

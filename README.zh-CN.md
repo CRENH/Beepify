@@ -39,6 +39,8 @@ key    = "你的-bark-key"
 
 密钥也可用 `BEEPIFY_*` 环境变量(`BARK_KEY`、`NTFY_TOPIC`)。
 
+设 `notify_idle = true` 可额外接收"Claude 在等你回复"的空闲提醒(turn 结束约 60 秒后触发)。默认关闭,因为它与"任务完成"通知重复。
+
 ## 命令
 
 | 命令 | 作用 |
