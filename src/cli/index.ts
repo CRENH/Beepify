@@ -2,7 +2,7 @@ import { parseArgs } from 'node:util'
 import { createInterface } from 'node:readline'
 import { writeFileSync, existsSync, copyFileSync } from 'node:fs'
 import { loadConfig, defaultConfigPath } from '../config/load'
-import { registerBuiltins, runNotify, runTest, runInit, runDoctor } from './commands'
+import { registerBuiltins, runNotify, runTest, runInit, runInitCodex, runDoctor } from './commands'
 import { runSetup, type SetupIO } from './setup'
 import { renderConfigToml } from './setup-core'
 import { detectOpenIsland, realProbe } from '../channels/desktop/detect'
@@ -54,12 +54,31 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   if (cmd === 'init') {
     const { values } = parseArgs({
       args: argv.slice(1),
-      options: { uninstall: { type: 'boolean', default: false } },
+      options: {
+        uninstall: { type: 'boolean', default: false },
+        agent: { type: 'string', default: 'claude-code' },
+      },
       allowPositionals: true,
     })
+    const uninstall = values.uninstall as boolean
+    const agent = values.agent as string
+
+    if (agent === 'codex') {
+      const codexConfigPath = join(homedir(), '.codex', 'config.toml')
+      const r = runInitCodex({ codexConfigPath, beepifyConfigPath: defaultConfigPath(), uninstall })
+      if (uninstall) {
+        console.log(r.hook.changed ? 'Removed Beepify hook from ~/.codex/config.toml' : 'No Beepify hook found')
+      } else {
+        console.log(r.configCreated ? `Created ${defaultConfigPath()}` : `Config already exists at ${defaultConfigPath()}`)
+        console.log(r.hook.changed ? 'Installed Beepify hook into ~/.codex/config.toml' : 'Hook already installed')
+        console.log('Next: edit your config.toml, then run `beepify test`.')
+      }
+      return 0
+    }
+
     const settingsPath = join(homedir(), '.claude', 'settings.json')
-    const r = runInit({ settingsPath, configPath: defaultConfigPath(), uninstall: values.uninstall as boolean })
-    if (values.uninstall) {
+    const r = runInit({ settingsPath, configPath: defaultConfigPath(), uninstall })
+    if (uninstall) {
       console.log(r.hook.changed ? 'Removed Beepify hook from settings.json' : 'No Beepify hook found')
     } else {
       console.log(r.configCreated ? `Created ${defaultConfigPath()}` : `Config already exists at ${defaultConfigPath()}`)

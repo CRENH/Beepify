@@ -10,6 +10,7 @@ import { barkChannel } from '../channels/bark'
 import { ntfyChannel } from '../channels/ntfy'
 import { desktopChannel } from '../channels/desktop'
 import { installHook, uninstallHook, HOOK_COMMAND } from '../config/settings-json'
+import { installCodexHook, uninstallCodexHook } from '../config/codex-toml'
 
 export function registerBuiltins(): void {
   registerSource(claudeCodeSource)
@@ -52,6 +53,15 @@ function exampleConfigPath(): string {
   return join(here, '..', '..', 'config.example.toml')
 }
 
+function ensureBeepifyConfig(configPath: string): boolean {
+  if (existsSync(configPath)) return false
+  mkdirSync(dirname(configPath), { recursive: true })
+  const example = exampleConfigPath()
+  if (existsSync(example)) copyFileSync(example, configPath)
+  else writeFileSync(configPath, 'debounce_seconds = 20\nlocale = "en"\nchannels = []\n')
+  return true
+}
+
 export function runInit(opts: {
   settingsPath: string
   configPath: string
@@ -63,15 +73,24 @@ export function runInit(opts: {
   if (opts.uninstall) {
     return { hook: uninstallHook(opts.settingsPath, HOOK_COMMAND), configCreated: false }
   }
-  let configCreated = false
-  if (!existsSync(opts.configPath)) {
-    mkdirSync(dirname(opts.configPath), { recursive: true })
-    const example = exampleConfigPath()
-    if (existsSync(example)) copyFileSync(example, opts.configPath)
-    else writeFileSync(opts.configPath, 'debounce_seconds = 20\nlocale = "en"\nchannels = []\n')
-    configCreated = true
-  }
+  const configCreated = ensureBeepifyConfig(opts.configPath)
   const hook = installHook(opts.settingsPath, HOOK_COMMAND)
+  return { hook, configCreated }
+}
+
+export function runInitCodex(opts: {
+  codexConfigPath: string
+  beepifyConfigPath: string
+  uninstall?: boolean
+}): {
+  hook: { changed: boolean; backup?: string }
+  configCreated: boolean
+} {
+  if (opts.uninstall) {
+    return { hook: uninstallCodexHook(opts.codexConfigPath), configCreated: false }
+  }
+  const configCreated = ensureBeepifyConfig(opts.beepifyConfigPath)
+  const hook = installCodexHook(opts.codexConfigPath)
   return { hook, configCreated }
 }
 
