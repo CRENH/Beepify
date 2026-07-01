@@ -5,9 +5,19 @@ export type ChannelAnswer =
   | { type: 'ntfy'; topic: string; server?: string }
   | { type: 'desktop'; provider: 'native' | 'open-island'; open_island_command?: string }
 
+export type AgentName = 'claude-code' | 'codex'
+
+export function normalizeAgents(s: string): AgentName[] {
+  const t = s.trim().toLowerCase()
+  if (t === '2' || t === 'codex') return ['codex']
+  if (t === '3' || t === 'both') return ['claude-code', 'codex']
+  return ['claude-code']
+}
+
 export interface SetupAnswers {
   locale: 'en' | 'zh-CN'
   notify_idle: boolean
+  agents: AgentName[]
   channels: ChannelAnswer[]
 }
 

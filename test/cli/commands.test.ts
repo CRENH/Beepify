@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mkdtempSync, writeFileSync, existsSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { registerBuiltins, runNotify, runInit, runDoctor } from '../../src/cli/commands'
+import { registerBuiltins, runNotify, runInit, runInitCodex, runDoctor } from '../../src/cli/commands'
 import type { BeepifyConfig } from '../../src/core/types'
 
 beforeEach(() => { registerBuiltins(); process.env.HOST_LABEL = 'TESTHOST' })
@@ -67,5 +67,28 @@ describe('runDoctor', () => {
     const dir = mkdtempSync(join(tmpdir(), 'beepify-doc-normal-'))
     const lines = runDoctor(normalCfg, join(dir, 'settings.json'))
     expect(lines.join('\n')).toContain('K12***')
+  })
+})
+
+describe('runInitCodex', () => {
+  it('scaffolds the beepify config and installs the codex hook', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'beepify-init-'))
+    const codexConfigPath = join(dir, 'codex', 'config.toml')
+    const beepifyConfigPath = join(dir, 'beepify', 'config.toml')
+    const r = runInitCodex({ codexConfigPath, beepifyConfigPath })
+    expect(r.configCreated).toBe(true)
+    expect(r.hook.changed).toBe(true)
+    expect(readFileSync(codexConfigPath, 'utf8')).toContain('[[hooks.Stop]]')
+  })
+  it('uninstall removes the codex hook and does not scaffold config', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'beepify-init-'))
+    const codexConfigPath = join(dir, 'config.toml')
+    const beepifyConfigPath = join(dir, 'beepify.toml')
+    writeFileSync(codexConfigPath, '')
+    runInitCodex({ codexConfigPath, beepifyConfigPath })
+    const r = runInitCodex({ codexConfigPath, beepifyConfigPath, uninstall: true })
+    expect(r.hook.changed).toBe(true)
+    expect(r.configCreated).toBe(false)
+    expect(readFileSync(codexConfigPath, 'utf8')).not.toContain('[[hooks.Stop]]')
   })
 })

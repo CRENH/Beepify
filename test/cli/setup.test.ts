@@ -13,20 +13,22 @@ function scriptedIO(answers: string[]): { io: SetupIO; out: string[] } {
 
 describe('runSetup', () => {
   it('collects locale, one bark channel, then stops, with notify_idle off', async () => {
-    // Script: locale -> add? y -> type bark -> key -> server -> icon -> add? n -> notify_idle? n
-    const { io } = scriptedIO(['zh-CN', 'y', 'bark', 'K', '', '', 'n', 'n'])
+    // locale -> add? y -> bark -> key -> server -> icon -> add? n -> notify_idle? n -> agents
+    const { io } = scriptedIO(['zh-CN', 'y', 'bark', 'K', '', '', 'n', 'n', '3'])
     const answers = await runSetup(io, { configPath: '/tmp/none.toml' })
     expect(answers.locale).toBe('zh-CN')
     expect(answers.notify_idle).toBe(false)
     expect(answers.channels).toEqual([{ type: 'bark', key: 'K' }])
+    expect(answers.agents).toEqual(['claude-code', 'codex'])
   })
 
   it('detects Open Island and records the command for a desktop channel', async () => {
-    const { io } = scriptedIO(['en', 'y', 'desktop', 'open-island', 'n', 'n'])
+    const { io } = scriptedIO(['en', 'y', 'desktop', 'open-island', 'n', 'n', '2'])
     const answers = await runSetup(io, {
       configPath: '/tmp/none.toml',
       detect: () => ({ installed: true, command: '/x/open-island-hooks.py' }),
     })
     expect(answers.channels[0]).toEqual({ type: 'desktop', provider: 'open-island', open_island_command: '/x/open-island-hooks.py' })
+    expect(answers.agents).toEqual(['codex'])
   })
 })

@@ -2,14 +2,14 @@ import { parseArgs } from 'node:util'
 import { createInterface } from 'node:readline'
 import { writeFileSync, existsSync, copyFileSync } from 'node:fs'
 import { loadConfig, defaultConfigPath } from '../config/load'
-import { registerBuiltins, runNotify, runTest, runInit, runDoctor } from './commands'
+import { registerBuiltins, runNotify, runTest, runInit, runInitCodex, runDoctor } from './commands'
 import { runSetup, type SetupIO } from './setup'
 import { renderConfigToml } from './setup-core'
 import { detectOpenIsland, realProbe } from '../channels/desktop/detect'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
-const VERSION = '0.2.0' // keep in sync with package.json
+const VERSION = '0.3.0' // keep in sync with package.json
 
 function readStdin(): Promise<string> {
   return new Promise((resolve) => {
@@ -26,7 +26,7 @@ const HELP = `beepify <command>
 
   notify --source <name>   read a hook event on stdin and push (used by hooks)
   setup                    interactive wizard: edit config, install hook, test
-  init [--uninstall]       scaffold config + install the Claude Code hook
+  init [--agent codex] [--uninstall]   scaffold config + install a hook (Claude Code by default, or Codex)
   test                     send a sample notification to verify channels
   doctor                   print config / channel / hook diagnostics
   --version                print version`
@@ -54,12 +54,31 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   if (cmd === 'init') {
     const { values } = parseArgs({
       args: argv.slice(1),
-      options: { uninstall: { type: 'boolean', default: false } },
+      options: {
+        uninstall: { type: 'boolean', default: false },
+        agent: { type: 'string', default: 'claude-code' },
+      },
       allowPositionals: true,
     })
+    const uninstall = values.uninstall as boolean
+    const agent = values.agent as string
+
+    if (agent === 'codex') {
+      const codexConfigPath = join(homedir(), '.codex', 'config.toml')
+      const r = runInitCodex({ codexConfigPath, beepifyConfigPath: defaultConfigPath(), uninstall })
+      if (uninstall) {
+        console.log(r.hook.changed ? 'Removed Beepify hook from ~/.codex/config.toml' : 'No Beepify hook found')
+      } else {
+        console.log(r.configCreated ? `Created ${defaultConfigPath()}` : `Config already exists at ${defaultConfigPath()}`)
+        console.log(r.hook.changed ? 'Installed Beepify hook into ~/.codex/config.toml' : 'Hook already installed')
+        console.log('Next: edit your config.toml, then run `beepify test`.')
+      }
+      return 0
+    }
+
     const settingsPath = join(homedir(), '.claude', 'settings.json')
-    const r = runInit({ settingsPath, configPath: defaultConfigPath(), uninstall: values.uninstall as boolean })
-    if (values.uninstall) {
+    const r = runInit({ settingsPath, configPath: defaultConfigPath(), uninstall })
+    if (uninstall) {
       console.log(r.hook.changed ? 'Removed Beepify hook from settings.json' : 'No Beepify hook found')
     } else {
       console.log(r.configCreated ? `Created ${defaultConfigPath()}` : `Config already exists at ${defaultConfigPath()}`)
@@ -96,10 +115,16 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     writeFileSync(configPath, renderConfigToml(answers))
     console.log(`Wrote ${configPath}`)
 
-    if (/^y/i.test(await io.ask('Install the Claude Code hook now? (y/n)', 'y'))) {
-      const settingsPath = join(homedir(), '.claude', 'settings.json')
-      const r = runInit({ settingsPath, configPath, uninstall: false })
-      console.log(r.hook.changed ? 'Installed Beepify hook.' : 'Hook already installed.')
+    for (const agent of answers.agents) {
+      if (agent === 'claude-code') {
+        const settingsPath = join(homedir(), '.claude', 'settings.json')
+        const r = runInit({ settingsPath, configPath, uninstall: false })
+        console.log(r.hook.changed ? 'Installed Claude Code hook.' : 'Claude Code hook already installed.')
+      } else if (agent === 'codex') {
+        const codexConfigPath = join(homedir(), '.codex', 'config.toml')
+        const r = runInitCodex({ codexConfigPath, beepifyConfigPath: configPath, uninstall: false })
+        console.log(r.hook.changed ? 'Installed Codex hook into ~/.codex/config.toml.' : 'Codex hook already installed.')
+      }
     }
     if (/^y/i.test(await io.ask('Send a test notification now? (y/n)', 'y'))) {
       for (const res of await runTest(loadConfig(configPath))) {
