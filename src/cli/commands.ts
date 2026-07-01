@@ -5,6 +5,7 @@ import type { BeepifyConfig, ChannelResult, NormalizedEvent } from '../core/type
 import { registerSource, registerChannel, getSource } from '../core/registry'
 import { dispatch } from '../core/dispatch'
 import { claudeCodeSource } from '../sources/claude-code'
+import { codexSource } from '../sources/codex'
 import { barkChannel } from '../channels/bark'
 import { ntfyChannel } from '../channels/ntfy'
 import { desktopChannel } from '../channels/desktop'
@@ -12,6 +13,7 @@ import { installHook, uninstallHook, HOOK_COMMAND } from '../config/settings-jso
 
 export function registerBuiltins(): void {
   registerSource(claudeCodeSource)
+  registerSource(codexSource)
   registerChannel(barkChannel)
   registerChannel(ntfyChannel)
   registerChannel(desktopChannel)
