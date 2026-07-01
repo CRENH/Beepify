@@ -22,6 +22,7 @@ export function loadConfig(
     host_label: typeof raw.host_label === 'string' ? raw.host_label : '',
     locale: raw.locale === 'zh-CN' ? 'zh-CN' : 'en',
     channels,
+    notify_idle: raw.notify_idle === true,
   }
   applyEnvOverrides(config, env)
   return config

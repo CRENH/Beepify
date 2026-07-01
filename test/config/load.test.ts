@@ -13,7 +13,15 @@ function tmpToml(body: string): string {
 describe('loadConfig', () => {
   it('applies defaults when file is absent', () => {
     const c = loadConfig('/nonexistent/config.toml', {})
-    expect(c).toMatchObject({ debounce_seconds: 20, host_label: '', locale: 'en', channels: [] })
+    expect(c).toMatchObject({ debounce_seconds: 20, host_label: '', locale: 'en', channels: [], notify_idle: false })
+  })
+  it('parses notify_idle = true from TOML', () => {
+    const p = tmpToml(`notify_idle = true\n`)
+    expect(loadConfig(p, {}).notify_idle).toBe(true)
+  })
+  it('notify_idle falls back to false for a non-boolean value', () => {
+    const p = tmpToml(`notify_idle = "yes"\n`)
+    expect(loadConfig(p, {}).notify_idle).toBe(false)
   })
   it('parses TOML channels and locale', () => {
     const p = tmpToml(`locale = "zh-CN"\n[[channels]]\ntype = "bark"\nkey = "K"\n`)

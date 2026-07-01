@@ -4,7 +4,7 @@ import { registerBuiltins, runNotify, runTest, runInit, runDoctor } from './comm
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
-const VERSION = '0.1.0' // keep in sync with package.json
+const VERSION = '0.1.1' // keep in sync with package.json
 
 function readStdin(): Promise<string> {
   return new Promise((resolve) => {

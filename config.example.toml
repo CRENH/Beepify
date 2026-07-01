@@ -4,6 +4,9 @@
 debounce_seconds = 20
 host_label = ""              # empty = auto-detect ComputerName
 locale = "en"                # "en" (default) | "zh-CN"
+notify_idle = false          # push the "waiting for your input" idle reminder that
+                             # fires ~60s after a turn ends? false (default) avoids a
+                             # duplicate of the Stop/done notification.
 
 # Add one [[channels]] block per push target. Unconfigured channels are skipped.
 

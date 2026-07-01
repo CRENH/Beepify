@@ -1,14 +1,40 @@
 import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { basename } from 'node:path'
-import type { Source, NormalizedEvent } from '../core/types'
+import type { Source, NormalizedEvent, BeepifyConfig } from '../core/types'
 
 const STRING_KEYS = ['command', 'file_path', 'path', 'url', 'query', 'pattern', 'plan', 'description', 'prompt']
+
+// Fields worth surfacing when recovering a best-effort snippet from an unparsed
+// raw tool input. 'question' is first so AskUserQuestion shows the prompt text.
+const RECOVER_KEYS = ['question', 'command', 'prompt', 'plan', 'description', 'query', 'path', 'url', 'file_path', 'pattern', 'header']
+
+function firstFieldFromRaw(raw: string): string {
+  for (const k of RECOVER_KEYS) {
+    const m = raw.match(new RegExp(`"${k}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`))
+    if (m && m[1].trim()) return m[1].replace(/\\"/g, '"').trim()
+  }
+  return ''
+}
 
 export function toolDesc(b: unknown): string {
   const block = (b ?? {}) as { name?: string; input?: Record<string, unknown> }
   const name = block.name || 'tool'
-  const inp = block.input || {}
+  let inp = block.input || {}
+
+  // Claude Code stores the model's raw output under __unparsedToolInput when a
+  // tool call's input fails strict JSON parsing. Recover content from it instead
+  // of degrading to a bare tool name.
+  const unparsed = inp.__unparsedToolInput as { raw?: unknown } | undefined
+  if (unparsed && typeof unparsed.raw === 'string') {
+    try {
+      const parsed = JSON.parse(unparsed.raw)
+      if (parsed && typeof parsed === 'object') inp = parsed as Record<string, unknown>
+    } catch {
+      const snippet = firstFieldFromRaw(unparsed.raw)
+      if (snippet) return `${name}: ${snippet}`
+    }
+  }
 
   if (name === 'AskUserQuestion') {
     const qs = inp.questions
@@ -103,15 +129,23 @@ export function parseTranscript(path: string): { summary: string; action: string
 
 export const claudeCodeSource: Source = {
   name: 'claude-code',
-  parse(raw: unknown): NormalizedEvent | null {
+  parse(raw: unknown, config?: BeepifyConfig): NormalizedEvent | null {
     const d = (raw ?? {}) as {
       hook_event_name?: string
       cwd?: string
       transcript_path?: string
       message?: string
+      notification_type?: string
     }
     const event = d.hook_event_name
     if (event !== 'Stop' && event !== 'Notification') return null
+
+    // The idle_prompt Notification fires ~60s after a turn ends if the user has
+    // not returned — it duplicates the Stop (done) push. Suppress it unless the
+    // user opts in via notify_idle.
+    if (event === 'Notification' && d.notification_type === 'idle_prompt' && !config?.notify_idle) {
+      return null
+    }
 
     const cwd = d.cwd || process.cwd()
     const host = resolveHost()

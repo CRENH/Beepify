@@ -36,11 +36,12 @@ export interface BeepifyConfig {
   host_label: string
   locale: 'en' | 'zh-CN'
   channels: ChannelConfig[]
+  notify_idle?: boolean
 }
 
 export interface Source {
   name: string
-  parse(raw: unknown): NormalizedEvent | null
+  parse(raw: unknown, config?: BeepifyConfig): NormalizedEvent | null
 }
 
 export interface Channel {

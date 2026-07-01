@@ -3,6 +3,7 @@ import { mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { toolDesc, parseTranscript, claudeCodeSource } from '../../src/sources/claude-code'
+import type { BeepifyConfig } from '../../src/core/types'
 
 describe('toolDesc', () => {
   it('AskUserQuestion: distinct prompts yield distinct text', () => {
@@ -24,6 +25,28 @@ describe('toolDesc', () => {
   })
   it('falls back to tool name when no string field', () => {
     expect(toolDesc({ name: 'TodoWrite', input: { todos: [{ x: 1 }] } })).toBe('TodoWrite')
+  })
+  it('recovers from __unparsedToolInput when raw is valid JSON', () => {
+    // Claude Code stores the raw string under __unparsedToolInput when a tool
+    // call's input fails strict parsing; toolDesc must still surface content.
+    const raw = JSON.stringify({ questions: [{ header: 'Idle', question: 'Suppress?' }] })
+    expect(toolDesc({ name: 'AskUserQuestion', input: { __unparsedToolInput: { raw } } }))
+      .toBe('AskUserQuestion: Idle: Suppress?')
+  })
+  it('recovers a generic tool field from __unparsedToolInput valid JSON', () => {
+    const raw = JSON.stringify({ command: 'rm -rf /tmp/x' })
+    expect(toolDesc({ name: 'Bash', input: { __unparsedToolInput: { raw } } }))
+      .toBe('Bash: rm -rf /tmp/x')
+  })
+  it('best-effort extracts a field when __unparsedToolInput raw is NOT valid JSON', () => {
+    // Truncated / malformed JSON that JSON.parse rejects, but still readable.
+    const raw = '{"questions":[{"header":"H","question":"Pick one?","options":[{"lab'
+    expect(toolDesc({ name: 'AskUserQuestion', input: { __unparsedToolInput: { raw } } }))
+      .toBe('AskUserQuestion: Pick one?')
+  })
+  it('falls back to bare name when __unparsedToolInput raw has nothing recoverable', () => {
+    expect(toolDesc({ name: 'AskUserQuestion', input: { __unparsedToolInput: { raw: '####' } } }))
+      .toBe('AskUserQuestion')
   })
 })
 
@@ -75,6 +98,30 @@ describe('claudeCodeSource.parse', () => {
     // No transcript_path -> action empty -> waiting-input; assert that path
     const ev = claudeCodeSource.parse({ hook_event_name: 'Notification', cwd: '/a/proj', message: 'hi' })
     expect(ev).toMatchObject({ kind: 'waiting-input', summary: 'hi' })
+  })
+  it('idle_prompt Notification is suppressed by default (notify_idle off)', () => {
+    const cfg: BeepifyConfig = { debounce_seconds: 0, host_label: '', locale: 'en', channels: [] }
+    const ev = claudeCodeSource.parse(
+      { hook_event_name: 'Notification', cwd: '/a/proj', notification_type: 'idle_prompt', message: 'Claude is waiting for your input' },
+      cfg,
+    )
+    expect(ev).toBeNull()
+  })
+  it('idle_prompt Notification is emitted when notify_idle is on', () => {
+    const cfg: BeepifyConfig = { debounce_seconds: 0, host_label: '', locale: 'en', channels: [], notify_idle: true }
+    const ev = claudeCodeSource.parse(
+      { hook_event_name: 'Notification', cwd: '/a/proj', notification_type: 'idle_prompt', message: 'Claude is waiting for your input' },
+      cfg,
+    )
+    expect(ev).toMatchObject({ kind: 'waiting-input', summary: 'Claude is waiting for your input' })
+  })
+  it('non-idle Notification is unaffected by notify_idle (approval still fires)', () => {
+    const cfg: BeepifyConfig = { debounce_seconds: 0, host_label: '', locale: 'en', channels: [] }
+    const ev = claudeCodeSource.parse(
+      { hook_event_name: 'Notification', cwd: '/a/proj', message: 'needs you' },
+      cfg,
+    )
+    expect(ev).toMatchObject({ kind: 'waiting-input', summary: 'needs you' })
   })
   void env
 })

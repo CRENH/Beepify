@@ -28,7 +28,7 @@ export async function runNotify(
   }
   const source = getSource(sourceName)
   if (!source) return []
-  const event = source.parse(parsed)
+  const event = source.parse(parsed, config)
   if (!event) return []
   if (config.host_label) event.host = config.host_label
   return dispatch(event, config)
