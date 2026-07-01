@@ -7,12 +7,14 @@ import { dispatch } from '../core/dispatch'
 import { claudeCodeSource } from '../sources/claude-code'
 import { barkChannel } from '../channels/bark'
 import { ntfyChannel } from '../channels/ntfy'
+import { desktopChannel } from '../channels/desktop'
 import { installHook, uninstallHook, HOOK_COMMAND } from '../config/settings-json'
 
 export function registerBuiltins(): void {
   registerSource(claudeCodeSource)
   registerChannel(barkChannel)
   registerChannel(ntfyChannel)
+  registerChannel(desktopChannel)
 }
 
 export async function runNotify(
