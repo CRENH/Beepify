@@ -20,3 +20,12 @@ notify_idle = false          # push the "waiting for your input" idle reminder t
 # type   = "ntfy"
 # topic  = "your-secret-topic"
 # server = "https://ntfy.sh"
+
+# Desktop notifications (macOS). provider = "native" (Notification Center; uses
+# terminal-notifier if installed, else osascript) or "open-island" (drives the
+# Dynamic Island app — install Open Island separately; auto-detected).
+# [[channels]]
+# type = "desktop"
+# provider = "native"
+# sound = ""               # optional; native only
+# open_island_command = "" # optional; auto-detected if empty

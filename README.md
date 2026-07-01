@@ -16,12 +16,13 @@ Beepify is a one-way notification router. It takes events from an agent (v1: **C
 
 ```bash
 npm install -g @elbc/beepify
-beepify init        # scaffolds ~/.config/beepify/config.toml and installs the Claude Code hook
+beepify setup       # interactive: pick language, add channels, install the hook, send a test
 ```
 
-Edit `~/.config/beepify/config.toml`, add a channel, then:
+`beepify setup` edits an existing config in place (current values shown as defaults). Prefer scripting? `beepify init` remains the non-interactive path:
 
 ```bash
+beepify init        # scaffolds ~/.config/beepify/config.toml and installs the Claude Code hook
 beepify test        # sends a sample notification
 ```
 
@@ -41,11 +42,24 @@ Secrets can also come from `BEEPIFY_*` env vars (`BARK_KEY`, `NTFY_TOPIC`).
 
 Set `notify_idle = true` to also receive the "Claude is waiting for your input" reminder that fires ~60s after a turn ends. It is off by default because it duplicates the done notification.
 
+### Desktop notifications (macOS)
+
+Add a `desktop` channel to get native macOS notifications:
+
+```toml
+[[channels]]
+type = "desktop"
+provider = "native"        # Notification Center (uses terminal-notifier if installed, else osascript)
+```
+
+Set `provider = "open-island"` to drive the Open Island Dynamic Island app instead (install it separately; Beepify auto-detects `open-island-hooks.py`).
+
 ## Commands
 
 | command | purpose |
 |---|---|
 | `beepify notify --source claude-code` | hook entry (invoked automatically) |
+| `beepify setup` | interactive wizard: edit config, install hook, send a test |
 | `beepify init [--uninstall]` | scaffold config + install/remove the hook |
 | `beepify test` | send a sample push to verify channels |
 | `beepify doctor` | print config / channel / hook diagnostics |

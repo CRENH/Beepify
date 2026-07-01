@@ -1,10 +1,15 @@
 import { parseArgs } from 'node:util'
+import { createInterface } from 'node:readline'
+import { writeFileSync, existsSync, copyFileSync } from 'node:fs'
 import { loadConfig, defaultConfigPath } from '../config/load'
 import { registerBuiltins, runNotify, runTest, runInit, runDoctor } from './commands'
+import { runSetup, type SetupIO } from './setup'
+import { renderConfigToml } from './setup-core'
+import { detectOpenIsland, realProbe } from '../channels/desktop/detect'
 import { join } from 'node:path'
 import { homedir } from 'node:os'
 
-const VERSION = '0.1.1' // keep in sync with package.json
+const VERSION = '0.2.0' // keep in sync with package.json
 
 function readStdin(): Promise<string> {
   return new Promise((resolve) => {
@@ -20,6 +25,7 @@ function readStdin(): Promise<string> {
 const HELP = `beepify <command>
 
   notify --source <name>   read a hook event on stdin and push (used by hooks)
+  setup                    interactive wizard: edit config, install hook, test
   init [--uninstall]       scaffold config + install the Claude Code hook
   test                     send a sample notification to verify channels
   doctor                   print config / channel / hook diagnostics
@@ -71,6 +77,36 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 
   if (cmd === 'doctor') {
     for (const line of runDoctor(loadConfig(), join(homedir(), '.claude', 'settings.json'))) console.log(line)
+    return 0
+  }
+
+  if (cmd === 'setup') {
+    const rl = createInterface({ input: process.stdin, output: process.stdout })
+    const io: SetupIO = {
+      ask: (q, def) =>
+        new Promise((res) => rl.question(def ? `${q} [${def}]: ` : `${q}: `, (a) => res(a.trim() || def || ''))),
+      print: (s) => console.log(s),
+    }
+    const configPath = defaultConfigPath()
+    const existing = existsSync(configPath) ? loadConfig(configPath) : undefined
+    const detect = () => detectOpenIsland({ probe: realProbe, exists: existsSync, home: homedir() })
+    const answers = await runSetup(io, { configPath, existing, detect })
+
+    if (existsSync(configPath)) copyFileSync(configPath, `${configPath}.beepify-bak.${Date.now()}`)
+    writeFileSync(configPath, renderConfigToml(answers))
+    console.log(`Wrote ${configPath}`)
+
+    if (/^y/i.test(await io.ask('Install the Claude Code hook now? (y/n)', 'y'))) {
+      const settingsPath = join(homedir(), '.claude', 'settings.json')
+      const r = runInit({ settingsPath, configPath, uninstall: false })
+      console.log(r.hook.changed ? 'Installed Beepify hook.' : 'Hook already installed.')
+    }
+    if (/^y/i.test(await io.ask('Send a test notification now? (y/n)', 'y'))) {
+      for (const res of await runTest(loadConfig(configPath))) {
+        console.log(`${res.channel}: ${res.skipped ? 'skipped' : res.ok ? 'ok' : 'FAIL ' + (res.error ?? '')}`)
+      }
+    }
+    rl.close()
     return 0
   }
 
